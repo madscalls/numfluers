@@ -6,7 +6,7 @@ const DEFAULT_FLOWERS = [
   { id: 3, name: "Sunflower", price: 5.99, photo: null, emoji: "🌻" },
   { id: 4, name: "Lily", price: 6.49, photo: null, emoji: "💐" },
   { id: 5, name: "Daisy", price: 2.99, photo: null, emoji: "🌼" },
-  { id: 6, name: "Orchid", price: 8.99, photo: null, emoji: "🪷" },
+  { id: 6, name: "Orchid", price: 74.95, photo: null, emoji: "🪷" },
 ];
 
 const DEFAULT_CONTAINERS = [
@@ -196,8 +196,8 @@ export default function FlowerCalculator() {
       {/* Header */}
       <div style={s.header}>
         <div>
-          <div style={s.headerTitle}>Bloom & Co.</div>
-          <div style={s.headerSub}>Point of Sale</div>
+          <div style={s.headerTitle}>Numfluers</div>
+          <div style={s.headerSub}>Flower Calculator</div>
         </div>
         <button
           style={s.settingsBtn}
