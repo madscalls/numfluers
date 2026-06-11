@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
 const DEFAULT_FLOWERS = [
-  { id: 1, name: "Rose", price: 4.99, photo: null, emoji: "🌹" },
+  { id: 1, name: "Rose", price: 3.99, photo: null, emoji: "🌹" },
   { id: 2, name: "Tulip", price: 3.49, photo: null, emoji: "🌷" },
   { id: 3, name: "Sunflower", price: 5.99, photo: null, emoji: "🌻" },
   { id: 4, name: "Lily", price: 6.49, photo: null, emoji: "💐" },
