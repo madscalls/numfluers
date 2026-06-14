@@ -1,43 +1,130 @@
 import { useState, useRef } from "react";
+import "./App.css";
+import rose from "../src/assets/rose.jpg";
+import alstro from "../src/assets/alstro.webp";
+import mum from "../src/assets/chrysanthemum.webp";
+import daisy from "../src/assets/daisy.webp";
+import delph from "../src/assets/delph.avif";
+import hydra from "../src/assets/hydrangea.webp";
+import lily from "../src/assets/lily.webp";
+import sprayRoses from "../src/assets/sprayroses.avif";
+import statice from "../src/assets/sprayroses.avif";
+import sunflower from "../src/assets/sunflower.jpg";
 
 const DEFAULT_FLOWERS = [
-  { id: 1, name: "Rose", price: 3.99, photo: null, emoji: "🌹" },
-  { id: 2, name: "Tulip", price: 3.49, photo: null, emoji: "🌷" },
-  { id: 3, name: "Sunflower", price: 5.99, photo: null, emoji: "🌻" },
-  { id: 4, name: "Lily", price: 6.49, photo: null, emoji: "💐" },
-  { id: 5, name: "Daisy", price: 2.99, photo: null, emoji: "🌼" },
-  { id: 6, name: "Orchid", price: 74.95, photo: null, emoji: "🪷" },
+  {
+    id: 1,
+    name: "Rose",
+    priceWrapped: 3.5,
+    priceDesign: 3.5,
+    photo: rose,
+    emoji: "🌹",
+  },
+  {
+    id: 2,
+    name: "Daisy",
+    priceWrapped: 2.0,
+    priceDesign: 2.0,
+    photo: daisy,
+    emoji: "🌼",
+  },
+  {
+    id: 3,
+    name: "Delphinium",
+    priceWrapped: 2.13,
+    priceDesign: 2.13,
+    photo: delph,
+    emoji: "💜",
+  },
+  {
+    id: 4,
+    name: "Lily",
+    priceWrapped: 4.13,
+    priceDesign: 4.13,
+    photo: lily,
+    emoji: "🌸",
+  },
+  {
+    id: 5,
+    name: "Alstro",
+    priceWrapped: 2.0,
+    priceDesign: 3.0,
+    photo: alstro,
+    emoji: "🌺",
+  },
+  {
+    id: 6,
+    name: "Sunflower",
+    priceWrapped: 2.38,
+    priceDesign: 3.33,
+    photo: sunflower,
+    emoji: "🌻",
+  },
+  {
+    id: 7,
+    name: "Statice",
+    priceWrapped: 1.5,
+    priceDesign: 2.0,
+    photo: statice,
+    emoji: "🪻",
+  },
+  {
+    id: 8,
+    name: "Chrysanthemum",
+    priceWrapped: 2.0,
+    priceDesign: 3.0,
+    photo: mum,
+    emoji: "🌷",
+  },
+  {
+    id: 9,
+    name: "Hydrangea",
+    priceWrapped: 4.0,
+    priceDesign: 4.0,
+    photo: hydra,
+    emoji: "💐",
+  },
 ];
 
 const DEFAULT_CONTAINERS = [
-  { id: "c1", name: "Vase", price: 8.0, emoji: "🏺" },
-  { id: "c2", name: "Basket", price: 12.0, emoji: "🧺" },
-  { id: "c3", name: "Wrapped", price: 3.5, emoji: "🎁" },
+  { id: "c1", name: "Vase", price: 0, emoji: "🏺" },
+  { id: "c2", name: "Basket", price: 0, emoji: "🧺" },
+  { id: "c3", name: "Wrapped", price: 0, emoji: "🎁" },
 ];
 
 export default function FlowerCalculator() {
   const [flowers, setFlowers] = useState(DEFAULT_FLOWERS);
   const [containers, setContainers] = useState(DEFAULT_CONTAINERS);
-  const [cart, setCart] = useState([]); // { id, name, price, emoji/photo, type, qty }
-  const [selected, setSelected] = useState(null); // item being keyed in
+  const [cart, setCart] = useState([]);
+  const [selected, setSelected] = useState(null);
   const [qtyInput, setQtyInput] = useState("");
 
+  // "wrapped" = wrapped price, "design" = design price
+  const [mode, setMode] = useState("wrapped");
+
   const [showSettings, setShowSettings] = useState(false);
-  const [settingsTab, setSettingsTab] = useState("flowers"); // "flowers" | "containers"
+  const [settingsTab, setSettingsTab] = useState("flowers");
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
-  const [editPrice, setEditPrice] = useState("");
+  const [editWrapped, setEditWrapped] = useState("");
+  const [editDesign, setEditDesign] = useState("");
+  const [editPrice, setEditPrice] = useState(""); // containers only
   const [editPhoto, setEditPhoto] = useState(null);
 
-  // Add item modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [addName, setAddName] = useState("");
+  const [addWrapped, setAddWrapped] = useState("");
+  const [addDesign, setAddDesign] = useState("");
   const [addPrice, setAddPrice] = useState("");
   const [addPhoto, setAddPhoto] = useState(null);
   const [addEmoji, setAddEmoji] = useState("");
 
   const fileRef = useRef();
   const addFileRef = useRef();
+
+  // resolve the active price for a flower based on current mode
+  const activePrice = (flower) =>
+    mode === "design" ? flower.priceDesign : flower.priceWrapped;
 
   // ── calculator logic ────────────────────────────────────────
   const handleItemTap = (item) => {
@@ -67,13 +154,16 @@ export default function FlowerCalculator() {
   };
 
   const commitToCart = (item, qty) => {
+    // snapshot the current active price at time of adding
+    const price = item.type === "container" ? item.price : activePrice(item);
+    const cartItem = { ...item, price, qty };
     setCart((prev) => {
       const ex = prev.find((i) => i.id === item.id);
       if (ex)
         return prev.map((i) =>
           i.id === item.id ? { ...i, qty: i.qty + qty } : i,
         );
-      return [...prev, { ...item, qty }];
+      return [...prev, cartItem];
     });
     setSelected(null);
     setQtyInput("");
@@ -88,10 +178,15 @@ export default function FlowerCalculator() {
     });
   };
 
+  const resolvedPrice = (item) =>
+    item.type === "container" ? item.price : activePrice(item);
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const pendingTotal = selected
-    ? (parseInt(qtyInput) || 1) * selected.price
+  const pendingPrice = selected
+    ? selected.type === "container"
+      ? selected.price
+      : activePrice(selected)
     : 0;
+  const pendingTotal = selected ? (parseInt(qtyInput) || 1) * pendingPrice : 0;
   const displayLine = selected
     ? `${selected.name}  ×  ${qtyInput || "1"}  =  $${pendingTotal.toFixed(2)}`
     : cart.length === 0
@@ -105,34 +200,77 @@ export default function FlowerCalculator() {
   const openEdit = (item) => {
     setEditingId(item.id);
     setEditName(item.name);
-    setEditPrice(String(item.price));
     setEditPhoto(item.photo ?? null);
+    if (isFlowerTab) {
+      setEditWrapped(String(item.priceWrapped));
+      setEditDesign(String(item.priceDesign));
+    } else {
+      setEditPrice(String(item.price));
+    }
   };
 
   const saveEdit = () => {
-    const price = parseFloat(editPrice) || 0;
-    const update = (list) =>
-      list.map((f) =>
-        f.id === editingId
-          ? { ...f, name: editName, price, photo: editPhoto ?? f.photo }
-          : f,
+    if (isFlowerTab) {
+      const priceWrapped = parseFloat(editWrapped) || 0;
+      const priceDesign = parseFloat(editDesign) || 0;
+      setFlowers((prev) =>
+        prev.map((f) =>
+          f.id === editingId
+            ? {
+                ...f,
+                name: editName,
+                priceWrapped,
+                priceDesign,
+                photo: editPhoto ?? f.photo,
+              }
+            : f,
+        ),
       );
-    if (isFlowerTab) setFlowers(update);
-    else setContainers(update);
-    setCart((prev) =>
-      prev.map((i) =>
-        i.id === editingId
-          ? { ...i, name: editName, price, photo: editPhoto ?? i.photo }
-          : i,
-      ),
-    );
-    if (selected?.id === editingId)
-      setSelected((s) => ({
-        ...s,
-        name: editName,
-        price,
-        photo: editPhoto ?? s.photo,
-      }));
+      setCart((prev) =>
+        prev.map((i) =>
+          i.id === editingId
+            ? {
+                ...i,
+                name: editName,
+                priceWrapped,
+                priceDesign,
+                photo: editPhoto ?? i.photo,
+              }
+            : i,
+        ),
+      );
+      if (selected?.id === editingId)
+        setSelected((s) => ({
+          ...s,
+          name: editName,
+          priceWrapped,
+          priceDesign,
+          photo: editPhoto ?? s.photo,
+        }));
+    } else {
+      const price = parseFloat(editPrice) || 0;
+      setContainers((prev) =>
+        prev.map((c) =>
+          c.id === editingId
+            ? { ...c, name: editName, price, photo: editPhoto ?? c.photo }
+            : c,
+        ),
+      );
+      setCart((prev) =>
+        prev.map((i) =>
+          i.id === editingId
+            ? { ...i, name: editName, price, photo: editPhoto ?? i.photo }
+            : i,
+        ),
+      );
+      if (selected?.id === editingId)
+        setSelected((s) => ({
+          ...s,
+          name: editName,
+          price,
+          photo: editPhoto ?? s.photo,
+        }));
+    }
     setEditingId(null);
   };
 
@@ -146,6 +284,8 @@ export default function FlowerCalculator() {
 
   const openAddModal = () => {
     setAddName("");
+    setAddWrapped("");
+    setAddDesign("");
     setAddPrice("");
     setAddPhoto(null);
     setAddEmoji(isFlowerTab ? "🌸" : "📦");
@@ -155,25 +295,26 @@ export default function FlowerCalculator() {
   const confirmAdd = () => {
     if (!addName.trim()) return;
     const id = `${isFlowerTab ? "f" : "c"}${Date.now()}`;
-    const newItem = {
-      id,
-      name: addName.trim(),
-      price: parseFloat(addPrice) || 0,
-      photo: addPhoto,
-      emoji: addEmoji || (isFlowerTab ? "🌸" : "📦"),
-      type: isFlowerTab ? "flower" : "container",
-    };
+    const newItem = isFlowerTab
+      ? {
+          id,
+          name: addName.trim(),
+          priceWrapped: parseFloat(addWrapped) || 0,
+          priceDesign: parseFloat(addDesign) || 0,
+          photo: addPhoto,
+          emoji: addEmoji || "🌸",
+        }
+      : {
+          id,
+          name: addName.trim(),
+          price: parseFloat(addPrice) || 0,
+          photo: addPhoto,
+          emoji: addEmoji || "📦",
+          type: "container",
+        };
     if (isFlowerTab) setFlowers((p) => [...p, newItem]);
     else setContainers((p) => [...p, newItem]);
     setShowAddModal(false);
-  };
-
-  const handleAddPhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setAddPhoto(ev.target.result);
-    reader.readAsDataURL(file);
   };
 
   const handlePhotoUpload = (e) => {
@@ -184,50 +325,70 @@ export default function FlowerCalculator() {
     reader.readAsDataURL(file);
   };
 
+  const handleAddPhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setAddPhoto(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const numPad = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "0", "⌫", "✓"];
 
   return (
-    <div style={s.page}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500&display=swap"
-        rel="stylesheet"
-      />
-
+    <div className="page">
       {/* Header */}
-      <div style={s.header}>
+      <div className="header">
         <div>
-          <div style={s.headerTitle}>Numfluers</div>
-          <div style={s.headerSub}>Flower Calculator</div>
+          <div className="header-title">Numfluers</div>
+          <div className="header-sub">Flower Calculator</div>
         </div>
-        <button
-          style={s.settingsBtn}
-          onClick={() => {
-            setShowSettings(true);
-            setSettingsTab("flowers");
-          }}
-        >
-          <SettingsIcon />
-        </button>
+        <div className="header-right">
+          {/* Mode toggle */}
+          <div className="mode-toggle">
+            <button
+              className={`mode-btn${mode === "wrapped" ? " mode-btn--active" : ""}`}
+              onClick={() => setMode("wrapped")}
+            >
+              Wrapped
+            </button>
+            <button
+              className={`mode-btn${mode === "design" ? " mode-btn--active" : ""}`}
+              onClick={() => setMode("design")}
+            >
+              Design
+            </button>
+          </div>
+          <button
+            className="settings-btn"
+            onClick={() => {
+              setShowSettings(true);
+              setSettingsTab("flowers");
+            }}
+          >
+            <SettingsIcon />
+          </button>
+        </div>
       </div>
 
       {/* Display bar */}
-      <div style={s.displayBar}>
-        <div style={{ ...s.displayText, ...(selected ? s.displayActive : {}) }}>
+      <div className="display-bar">
+        <div className={`display-text${selected ? " display-active" : ""}`}>
           {displayLine}
         </div>
         {selected && (
-          <button style={s.displayClear} onClick={handleClear}>
+          <button className="display-clear" onClick={handleClear}>
             ✕
           </button>
         )}
       </div>
 
       {/* Body */}
-      <div style={s.body}>
-        {/* Left: flowers + containers */}
-        <div style={s.leftCol}>
-          <div style={s.sectionLabel}>Flowers</div>
-          <div style={s.flowerGrid}>
+      <div className="body">
+        {/* Left: flowers */}
+        <div className="left-col">
+          <div className="section-label">Flowers</div>
+          <div className="flower-grid">
             {flowers.map((flower) => {
               const inCart = cart.find((i) => i.id === flower.id)?.qty || 0;
               const isSel = selected?.id === flower.id;
@@ -239,6 +400,7 @@ export default function FlowerCalculator() {
                   isSelected={isSel}
                   onTap={handleItemTap}
                   size="flower"
+                  displayPrice={activePrice(flower)}
                 />
               );
             })}
@@ -246,23 +408,21 @@ export default function FlowerCalculator() {
         </div>
 
         {/* Right: numpad + containers */}
-        <div style={s.rightCol}>
-          {/* Numpad */}
-          <div style={s.numpad}>
+        <div className="right-col">
+          <div className="numpad">
             {numPad.map((key) => {
               const isConfirm = key === "✓";
               const isBack = key === "⌫";
               const disabled = !selected;
+              let cls = "num-key";
+              if (isConfirm) cls += " num-key--confirm";
+              if (isBack) cls += " num-key--back";
+              if (disabled) cls += " num-key--disabled";
               return (
                 <button
                   key={key}
+                  className={cls}
                   disabled={disabled}
-                  style={{
-                    ...s.numKey,
-                    ...(isConfirm ? s.numKeyConfirm : {}),
-                    ...(isBack ? s.numKeyBack : {}),
-                    ...(disabled ? s.numKeyDisabled : {}),
-                  }}
                   onClick={() =>
                     isConfirm
                       ? handleConfirm()
@@ -277,20 +437,20 @@ export default function FlowerCalculator() {
             })}
           </div>
 
-          {/* Containers */}
-          <div style={s.sectionLabel}>Containers</div>
-          <div style={s.containerGrid}>
+          <div className="section-label">Containers</div>
+          <div className="container-grid">
             {containers.map((c) => {
               const inCart = cart.find((i) => i.id === c.id)?.qty || 0;
               const isSel = selected?.id === c.id;
               return (
                 <ItemButton
                   key={c.id}
-                  item={c}
+                  item={{ ...c, type: "container" }}
                   inCart={inCart}
                   isSelected={isSel}
                   onTap={handleItemTap}
                   size="container"
+                  displayPrice={c.price}
                 />
               );
             })}
@@ -299,34 +459,37 @@ export default function FlowerCalculator() {
       </div>
 
       {/* Order summary */}
-      <div style={s.cartPanel}>
-        <div style={s.cartHeader}>
-          <div style={s.cartTitle}>Order</div>
+      <div className="cart-panel">
+        <div className="cart-header">
+          <div className="cart-title">Order</div>
           {cart.length > 0 && (
-            <button style={s.clearAll} onClick={() => setCart([])}>
+            <button className="clear-all" onClick={() => setCart([])}>
               Clear all
             </button>
           )}
         </div>
         {cart.length === 0 ? (
-          <div style={s.cartEmpty}>No items yet</div>
+          <div className="cart-empty">No items yet</div>
         ) : (
-          <div style={s.cartList}>
+          <div className="cart-list">
             {cart.map((item) => (
-              <div key={item.id} style={s.cartRow}>
-                <span style={s.cartEmoji}>
+              <div key={item.id} className="cart-row">
+                <span className="cart-emoji">
                   {item.photo ? (
-                    <img src={item.photo} alt="" style={s.cartThumb} />
+                    <img src={item.photo} alt="" className="cart-thumb" />
                   ) : (
                     item.emoji
                   )}
                 </span>
-                <span style={s.cartName}>{item.name}</span>
-                <span style={s.cartQty}>×{item.qty}</span>
-                <span style={s.cartAmt}>
+                <span className="cart-name">{item.name}</span>
+                <span className="cart-qty">×{item.qty}</span>
+                <span className="cart-amt">
                   ${(item.price * item.qty).toFixed(2)}
                 </span>
-                <button style={s.removeBtn} onClick={() => removeOne(item.id)}>
+                <button
+                  className="remove-btn"
+                  onClick={() => removeOne(item.id)}
+                >
                   −
                 </button>
               </div>
@@ -335,10 +498,10 @@ export default function FlowerCalculator() {
         )}
         {cart.length > 0 && (
           <>
-            <div style={s.divider} />
-            <div style={s.totalRow}>
-              <span style={s.totalLabel}>Total</span>
-              <span style={s.totalAmt}>${total.toFixed(2)}</span>
+            <div className="divider" />
+            <div className="total-row">
+              <span className="total-label">Total</span>
+              <span className="total-amt">${total.toFixed(2)}</span>
             </div>
           </>
         )}
@@ -347,17 +510,17 @@ export default function FlowerCalculator() {
       {/* Settings modal */}
       {showSettings && (
         <div
-          style={s.overlay}
+          className="overlay"
           onClick={() => {
             setShowSettings(false);
             setEditingId(null);
           }}
         >
-          <div style={s.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={s.modalHeader}>
-              <div style={s.modalTitle}>Settings</div>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Settings</div>
               <button
-                style={s.closeBtn}
+                className="close-btn"
                 onClick={() => {
                   setShowSettings(false);
                   setEditingId(null);
@@ -367,15 +530,11 @@ export default function FlowerCalculator() {
               </button>
             </div>
 
-            {/* Tabs */}
-            <div style={s.tabs}>
+            <div className="tabs">
               {["flowers", "containers"].map((tab) => (
                 <button
                   key={tab}
-                  style={{
-                    ...s.tab,
-                    ...(settingsTab === tab ? s.tabActive : {}),
-                  }}
+                  className={`tab${settingsTab === tab ? " tab--active" : ""}`}
                   onClick={() => {
                     setSettingsTab(tab);
                     setEditingId(null);
@@ -386,21 +545,25 @@ export default function FlowerCalculator() {
               ))}
             </div>
 
-            <div style={s.flowerList}>
+            <div className="flower-list">
               {editList.map((item) => (
-                <div key={item.id} style={s.listItem}>
+                <div key={item.id} className="list-item">
                   {editingId === item.id ? (
-                    <div style={s.editForm}>
+                    <div className="edit-form">
                       <div
-                        style={s.photoUploadArea}
+                        className="photo-upload-area"
                         onClick={() => fileRef.current.click()}
                       >
                         {editPhoto ? (
-                          <img src={editPhoto} alt="" style={s.editPhotoFull} />
+                          <img
+                            src={editPhoto}
+                            alt=""
+                            className="edit-photo-full"
+                          />
                         ) : (
                           <span style={{ fontSize: 40 }}>{item.emoji}</span>
                         )}
-                        <div style={s.photoHint}>Tap to change photo</div>
+                        <div className="photo-hint">Tap to change photo</div>
                         <input
                           ref={fileRef}
                           type="file"
@@ -410,35 +573,64 @@ export default function FlowerCalculator() {
                         />
                       </div>
                       <input
-                        style={s.editInput}
+                        className="edit-input"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Name"
                       />
-                      <div style={s.priceRow}>
-                        <span style={s.dollar}>$</span>
-                        <input
-                          style={{ ...s.editInput, flex: 1 }}
-                          value={editPrice}
-                          onChange={(e) => setEditPrice(e.target.value)}
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Price"
-                        />
-                      </div>
-                      <div style={s.editActions}>
-                        <button style={s.saveBtn} onClick={saveEdit}>
+                      {isFlowerTab ? (
+                        <div className="dual-price-row">
+                          <div className="price-row">
+                            <span className="dollar">$</span>
+                            <input
+                              className="edit-input price-input"
+                              value={editWrapped}
+                              onChange={(e) => setEditWrapped(e.target.value)}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="Wrapped price"
+                            />
+                          </div>
+                          <div className="price-row">
+                            <span className="dollar">$</span>
+                            <input
+                              className="edit-input price-input"
+                              value={editDesign}
+                              onChange={(e) => setEditDesign(e.target.value)}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="Design price"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="price-row">
+                          <span className="dollar">$</span>
+                          <input
+                            className="edit-input price-input"
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value)}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Price"
+                          />
+                        </div>
+                      )}
+                      <div className="edit-actions">
+                        <button className="save-btn" onClick={saveEdit}>
                           Save
                         </button>
                         <button
-                          style={s.cancelBtn}
+                          className="cancel-btn"
                           onClick={() => setEditingId(null)}
                         >
                           Cancel
                         </button>
                         <button
-                          style={s.deleteBtn}
+                          className="delete-btn"
                           onClick={() => deleteItem(item.id)}
                         >
                           Delete
@@ -446,32 +638,37 @@ export default function FlowerCalculator() {
                       </div>
                     </div>
                   ) : (
-                    <div style={s.listRow}>
-                      <div style={s.listLeft}>
-                        <div style={s.listThumb}>
+                    <div className="list-row">
+                      <div className="list-left">
+                        <div className="list-thumb">
                           {item.photo ? (
                             <img
                               src={item.photo}
                               alt=""
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                borderRadius: 10,
-                              }}
+                              className="list-thumb-img"
                             />
                           ) : (
                             <span style={{ fontSize: 26 }}>{item.emoji}</span>
                           )}
                         </div>
                         <div>
-                          <div style={s.listName}>{item.name}</div>
-                          <div style={s.listPrice}>
-                            ${item.price.toFixed(2)}
-                          </div>
+                          <div className="list-name">{item.name}</div>
+                          {isFlowerTab ? (
+                            <div className="list-price">
+                              W: ${item.priceWrapped.toFixed(2)} · D: $
+                              {item.priceDesign.toFixed(2)}
+                            </div>
+                          ) : (
+                            <div className="list-price">
+                              ${item.price.toFixed(2)}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <button style={s.editBtn} onClick={() => openEdit(item)}>
+                      <button
+                        className="edit-btn"
+                        onClick={() => openEdit(item)}
+                      >
                         Edit
                       </button>
                     </div>
@@ -479,42 +676,45 @@ export default function FlowerCalculator() {
                 </div>
               ))}
             </div>
-            <button style={s.addBtn} onClick={openAddModal}>
+            <button className="add-btn" onClick={openAddModal}>
               + Add {isFlowerTab ? "Flower" : "Container"}
             </button>
           </div>
         </div>
       )}
+
       {/* Add Item modal */}
       {showAddModal && (
         <div
-          style={{ ...s.overlay, zIndex: 200 }}
+          className="overlay overlay--top"
           onClick={() => setShowAddModal(false)}
         >
           <div
-            style={{ ...s.modal, borderRadius: 28 }}
+            className="modal modal--centered"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={s.modalHeader}>
-              <div style={s.modalTitle}>
+            <div className="modal-header">
+              <div className="modal-title">
                 Add {isFlowerTab ? "Flower" : "Container"}
               </div>
-              <button style={s.closeBtn} onClick={() => setShowAddModal(false)}>
+              <button
+                className="close-btn"
+                onClick={() => setShowAddModal(false)}
+              >
                 ✕
               </button>
             </div>
 
-            {/* Photo upload */}
             <div
-              style={s.photoUploadArea}
+              className="photo-upload-area"
               onClick={() => addFileRef.current.click()}
             >
               {addPhoto ? (
-                <img src={addPhoto} alt="" style={s.editPhotoFull} />
+                <img src={addPhoto} alt="" className="edit-photo-full" />
               ) : (
                 <span style={{ fontSize: 52 }}>{addEmoji}</span>
               )}
-              <div style={s.photoHint}>Tap to upload a photo</div>
+              <div className="photo-hint">Tap to upload a photo</div>
               <input
                 ref={addFileRef}
                 type="file"
@@ -524,18 +724,27 @@ export default function FlowerCalculator() {
               />
             </div>
 
-            {/* Emoji picker row (quick defaults) */}
-            <div style={am.emojiRow}>
+            <div className="emoji-row">
               {(isFlowerTab
-                ? ["🌹", "🌷", "🌻", "💐", "🌼", "🪷", "🌸", "🌺", "🏵️", "🌾"]
+                ? [
+                    "🌹",
+                    "🌷",
+                    "🌻",
+                    "💐",
+                    "🌼",
+                    "🪷",
+                    "🌸",
+                    "🌺",
+                    "🏵️",
+                    "🌾",
+                    "💜",
+                    "🪻",
+                  ]
                 : ["🏺", "🧺", "🎁", "📦", "🪣", "🫙", "🍶", "🪴"]
               ).map((em) => (
                 <button
                   key={em}
-                  style={{
-                    ...am.emojiBtn,
-                    ...(addEmoji === em && !addPhoto ? am.emojiBtnActive : {}),
-                  }}
+                  className={`emoji-btn${addEmoji === em && !addPhoto ? " emoji-btn--active" : ""}`}
                   onClick={() => {
                     setAddEmoji(em);
                     setAddPhoto(null);
@@ -546,16 +755,9 @@ export default function FlowerCalculator() {
               ))}
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                marginTop: 4,
-              }}
-            >
+            <div className="add-fields">
               <input
-                style={s.editInput}
+                className="edit-input"
                 value={addName}
                 onChange={(e) => setAddName(e.target.value)}
                 placeholder={
@@ -565,29 +767,59 @@ export default function FlowerCalculator() {
                 }
                 autoFocus
               />
-              <div style={s.priceRow}>
-                <span style={s.dollar}>$</span>
-                <input
-                  style={{ ...s.editInput, flex: 1 }}
-                  value={addPrice}
-                  onChange={(e) => setAddPrice(e.target.value)}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Price"
-                />
-              </div>
+              {isFlowerTab ? (
+                <div className="dual-price-row">
+                  <div className="price-row">
+                    <span className="dollar">$</span>
+                    <input
+                      className="edit-input price-input"
+                      value={addWrapped}
+                      onChange={(e) => setAddWrapped(e.target.value)}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Wrapped price"
+                    />
+                  </div>
+                  <div className="price-row">
+                    <span className="dollar">$</span>
+                    <input
+                      className="edit-input price-input"
+                      value={addDesign}
+                      onChange={(e) => setAddDesign(e.target.value)}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Design price"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="price-row">
+                  <span className="dollar">$</span>
+                  <input
+                    className="edit-input price-input"
+                    value={addPrice}
+                    onChange={(e) => setAddPrice(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Price"
+                  />
+                </div>
+              )}
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            <div className="add-modal-actions">
               <button
-                style={s.cancelBtn}
+                className="cancel-btn"
                 onClick={() => setShowAddModal(false)}
               >
                 Cancel
               </button>
               <button
-                style={{ ...s.saveBtn, opacity: addName.trim() ? 1 : 0.4 }}
+                className="save-btn"
+                style={{ opacity: addName.trim() ? 1 : 0.4 }}
                 onClick={confirmAdd}
                 disabled={!addName.trim()}
               >
@@ -601,537 +833,37 @@ export default function FlowerCalculator() {
   );
 }
 
-// ── Reusable item button ────────────────────────────────────────
-function ItemButton({ item, inCart, isSelected, onTap, size }) {
+// ── Reusable item button ─────────────────────────────────────────
+function ItemButton({ item, inCart, isSelected, onTap, size, displayPrice }) {
   const isSmall = size === "container";
+  let cls = "item-btn";
+  if (isSmall) cls += " item-btn--small";
+  if (isSelected) cls += " item-btn--selected";
+  if (inCart > 0 && !isSelected) cls += " item-btn--in-cart";
+
   return (
-    <button
-      style={{
-        ...s.itemBtn,
-        ...(isSmall ? s.itemBtnSmall : {}),
-        ...(isSelected ? s.itemBtnSelected : {}),
-        ...(inCart > 0 && !isSelected ? s.itemBtnInCart : {}),
-      }}
-      onClick={() => onTap(item)}
-    >
-      <div style={{ ...s.itemThumb, ...(isSmall ? s.itemThumbSmall : {}) }}>
+    <button className={cls} onClick={() => onTap(item)}>
+      <div className={`item-thumb${isSmall ? " item-thumb--small" : ""}`}>
         {item.photo ? (
-          <img src={item.photo} alt={item.name} style={s.itemPhoto} />
+          <img src={item.photo} alt={item.name} className="item-photo" />
         ) : (
           <span style={{ fontSize: isSmall ? 22 : 30 }}>{item.emoji}</span>
         )}
       </div>
-      <div style={{ ...s.itemName, ...(isSmall ? s.itemNameSmall : {}) }}>
+      <div className={`item-name${isSmall ? " item-name--small" : ""}`}>
         {item.name}
       </div>
-      <div style={{ ...s.itemPrice, ...(isSmall ? s.itemPriceSmall : {}) }}>
-        ${item.price.toFixed(2)}
+      <div className={`item-price${isSmall ? " item-price--small" : ""}`}>
+        ${displayPrice.toFixed(2)}
       </div>
       {inCart > 0 && (
-        <div style={{ ...s.badge, ...(isSelected ? s.badgeSelected : {}) }}>
+        <div className={`badge${isSelected ? " badge--selected" : ""}`}>
           {inCart}
         </div>
       )}
     </button>
   );
 }
-
-const pink = "#e8849a";
-const rose = "#7c3f52";
-
-const s = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(160deg,#fdf6f0 0%,#fce8e8 60%,#f5e6f0 100%)",
-    fontFamily: "'DM Sans', sans-serif",
-    display: "flex",
-    flexDirection: "column",
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "20px 20px 12px",
-  },
-  headerTitle: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 26,
-    fontWeight: 600,
-    color: rose,
-  },
-  headerSub: {
-    fontSize: 11,
-    color: "#b08090",
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-  },
-  settingsBtn: {
-    background: "rgba(124,63,82,0.1)",
-    border: "none",
-    borderRadius: 12,
-    width: 42,
-    height: 42,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    color: rose,
-  },
-
-  displayBar: {
-    margin: "0 16px 10px",
-    background: "#fff",
-    borderRadius: 18,
-    padding: "14px 18px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 54,
-    boxShadow: "0 2px 12px rgba(180,100,120,0.1)",
-  },
-  displayText: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 20,
-    color: "#9a7080",
-    flex: 1,
-  },
-  displayActive: { color: rose, fontWeight: 600, fontSize: 22 },
-  displayClear: {
-    background: "none",
-    border: "none",
-    color: "#c0a0a8",
-    fontSize: 18,
-    cursor: "pointer",
-    padding: "0 0 0 10px",
-  },
-
-  body: { display: "flex", gap: 10, padding: "0 16px", flex: 1 },
-
-  leftCol: { display: "flex", flexDirection: "column", flex: 1, gap: 6 },
-  rightCol: { display: "flex", flexDirection: "column", gap: 6, width: 154 },
-  sectionLabel: {
-    fontSize: 10,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    color: "#b08090",
-    paddingLeft: 2,
-  },
-
-  flowerGrid: { display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 },
-  containerGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(1,1fr)",
-    gap: 6,
-  },
-
-  // shared item button
-  itemBtn: {
-    background: "#fff",
-    border: "2px solid transparent",
-    borderRadius: 18,
-    padding: "10px 6px 8px",
-    cursor: "pointer",
-    textAlign: "center",
-    position: "relative",
-    boxShadow: "0 2px 10px rgba(180,100,120,0.08)",
-    transition: "transform 0.12s, border-color 0.12s",
-  },
-  itemBtnSmall: {
-    borderRadius: 14,
-    padding: "7px 8px",
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    textAlign: "left",
-  },
-  itemBtnSelected: {
-    borderColor: pink,
-    background: "#fff5f7",
-    transform: "scale(1.03)",
-    boxShadow: "0 4px 18px rgba(232,132,154,0.3)",
-  },
-  itemBtnInCart: { borderColor: "rgba(232,132,154,0.35)" },
-
-  itemThumb: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    margin: "0 auto 6px",
-    background: "linear-gradient(135deg,#fde8ed,#fdf0e8)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  itemThumbSmall: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    margin: 0,
-    flexShrink: 0,
-  },
-  itemPhoto: { width: "100%", height: "100%", objectFit: "cover" },
-  itemName: {
-    fontSize: 12,
-    fontWeight: 500,
-    color: "#5a3040",
-    lineHeight: 1.2,
-  },
-  itemNameSmall: { fontSize: 12, fontWeight: 500, color: "#5a3040", flex: 1 },
-  itemPrice: {
-    fontSize: 13,
-    color: "#b07080",
-    fontFamily: "'Cormorant Garamond',serif",
-    fontWeight: 600,
-  },
-  itemPriceSmall: {
-    fontSize: 12,
-    color: "#b07080",
-    fontFamily: "'Cormorant Garamond',serif",
-    fontWeight: 600,
-    marginLeft: "auto",
-  },
-
-  badge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    background: pink,
-    color: "#fff",
-    borderRadius: 999,
-    minWidth: 20,
-    height: 20,
-    fontSize: 11,
-    fontWeight: 700,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 4px",
-  },
-  badgeSelected: { background: rose },
-
-  // numpad
-  numpad: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3,1fr)",
-    gap: 6,
-  },
-  numKey: {
-    height: 46,
-    borderRadius: 12,
-    border: "none",
-    background: "#fff",
-    fontSize: 19,
-    fontFamily: "'Cormorant Garamond',serif",
-    fontWeight: 600,
-    color: rose,
-    cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(180,100,120,0.08)",
-    transition: "transform 0.1s",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  numKeyConfirm: {
-    background: `linear-gradient(135deg,${pink},#e86070)`,
-    color: "#fff",
-    fontSize: 20,
-  },
-  numKeyBack: { background: "rgba(232,132,154,0.12)", color: "#c06070" },
-  numKeyDisabled: { opacity: 0.3, cursor: "not-allowed" },
-
-  // cart
-  cartPanel: {
-    margin: "10px 16px 24px",
-    background: "#fff",
-    borderRadius: 22,
-    padding: "16px 18px",
-    boxShadow: "0 4px 20px rgba(180,100,120,0.1)",
-  },
-  cartHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 10,
-  },
-  cartTitle: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 20,
-    fontWeight: 600,
-    color: rose,
-  },
-  clearAll: {
-    background: "none",
-    border: "none",
-    fontSize: 12,
-    color: "#c0a0a8",
-    cursor: "pointer",
-    letterSpacing: "0.04em",
-  },
-  cartEmpty: {
-    color: "#c0a0a8",
-    fontSize: 13,
-    textAlign: "center",
-    padding: "8px 0",
-  },
-  cartList: { display: "flex", flexDirection: "column", gap: 8 },
-  cartRow: { display: "flex", alignItems: "center", gap: 8 },
-  cartEmoji: { fontSize: 18, width: 26, textAlign: "center", flexShrink: 0 },
-  cartThumb: { width: 26, height: 26, borderRadius: 7, objectFit: "cover" },
-  cartName: { flex: 1, fontSize: 14, color: "#5a3040", fontWeight: 500 },
-  cartQty: { fontSize: 13, color: "#b08090", minWidth: 28 },
-  cartAmt: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 17,
-    fontWeight: 600,
-    color: rose,
-    minWidth: 52,
-    textAlign: "right",
-  },
-  removeBtn: {
-    background: "rgba(232,132,154,0.12)",
-    border: "none",
-    borderRadius: 8,
-    width: 26,
-    height: 26,
-    fontSize: 16,
-    cursor: "pointer",
-    color: rose,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  divider: { borderTop: "1px dashed rgba(180,120,140,0.2)", margin: "12px 0" },
-  totalRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-  },
-  totalLabel: {
-    fontSize: 12,
-    letterSpacing: "0.1em",
-    textTransform: "uppercase",
-    color: "#b08090",
-  },
-  totalAmt: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 32,
-    fontWeight: 700,
-    color: rose,
-  },
-
-  // settings modal
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(80,30,40,0.45)",
-    backdropFilter: "blur(6px)",
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "center",
-    zIndex: 100,
-  },
-  modal: {
-    background: "#fff",
-    borderRadius: "28px 28px 0 0",
-    width: "100%",
-    maxWidth: 480,
-    padding: 24,
-    maxHeight: "85vh",
-    overflowY: "auto",
-  },
-  modalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 24,
-    fontWeight: 600,
-    color: rose,
-  },
-  closeBtn: {
-    background: "rgba(180,120,130,0.12)",
-    border: "none",
-    borderRadius: 10,
-    width: 36,
-    height: 36,
-    cursor: "pointer",
-    color: "#9a5060",
-    fontSize: 16,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  tabs: { display: "flex", gap: 8, marginBottom: 16 },
-  tab: {
-    flex: 1,
-    padding: "8px",
-    borderRadius: 12,
-    border: "none",
-    background: "rgba(180,120,140,0.1)",
-    color: "#9a6070",
-    fontSize: 14,
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-  tabActive: { background: pink, color: "#fff" },
-
-  flowerList: { display: "flex", flexDirection: "column", gap: 10 },
-  listItem: { background: "#fdf6f8", borderRadius: 16, padding: 14 },
-  listRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  listLeft: { display: "flex", alignItems: "center", gap: 14 },
-  listThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    background: "linear-gradient(135deg,#fde8ed,#fdf0e8)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    flexShrink: 0,
-  },
-  listName: { fontWeight: 500, color: "#5a3040", fontSize: 15 },
-  listPrice: {
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 16,
-    color: "#b07080",
-    fontWeight: 600,
-  },
-  editBtn: {
-    background: "rgba(232,132,154,0.12)",
-    border: "none",
-    borderRadius: 10,
-    padding: "6px 16px",
-    color: rose,
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 500,
-  },
-
-  editForm: { display: "flex", flexDirection: "column", gap: 10 },
-  photoUploadArea: {
-    background: "linear-gradient(135deg,#fde8ed,#fdf0e8)",
-    borderRadius: 16,
-    height: 100,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    gap: 4,
-    overflow: "hidden",
-    position: "relative",
-  },
-  editPhotoFull: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    position: "absolute",
-    inset: 0,
-  },
-  photoHint: {
-    fontSize: 11,
-    color: "#b08090",
-    letterSpacing: "0.05em",
-    position: "relative",
-    zIndex: 1,
-  },
-  editInput: {
-    background: "#fff",
-    border: "1.5px solid rgba(180,120,140,0.25)",
-    borderRadius: 12,
-    padding: "10px 14px",
-    fontSize: 15,
-    color: "#5a3040",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  priceRow: { display: "flex", alignItems: "center", gap: 6 },
-  dollar: {
-    color: "#b07080",
-    fontFamily: "'Cormorant Garamond',serif",
-    fontSize: 20,
-    fontWeight: 600,
-  },
-  editActions: { display: "flex", gap: 8 },
-  saveBtn: {
-    flex: 1,
-    background: pink,
-    border: "none",
-    borderRadius: 12,
-    padding: 10,
-    color: "#fff",
-    fontWeight: 600,
-    fontSize: 14,
-    cursor: "pointer",
-  },
-  cancelBtn: {
-    flex: 1,
-    background: "rgba(180,120,140,0.12)",
-    border: "none",
-    borderRadius: 12,
-    padding: 10,
-    color: "#9a6070",
-    fontSize: 14,
-    cursor: "pointer",
-  },
-  deleteBtn: {
-    background: "rgba(220,80,80,0.1)",
-    border: "none",
-    borderRadius: 12,
-    padding: "10px 14px",
-    color: "#c05060",
-    fontSize: 14,
-    cursor: "pointer",
-  },
-  addBtn: {
-    marginTop: 14,
-    width: "100%",
-    padding: 12,
-    background: "linear-gradient(135deg,#f5c6d0,#f5d0c6)",
-    border: "none",
-    borderRadius: 16,
-    color: rose,
-    fontWeight: 600,
-    fontSize: 15,
-    cursor: "pointer",
-  },
-};
-
-const am = {
-  emojiRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
-    margin: "12px 0 8px",
-  },
-  emojiBtn: {
-    fontSize: 24,
-    background: "rgba(180,120,140,0.08)",
-    border: "2px solid transparent",
-    borderRadius: 12,
-    width: 44,
-    height: 44,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-  },
-  emojiBtnActive: {
-    borderColor: "#e8849a",
-    background: "#fff5f7",
-  },
-};
 
 function SettingsIcon() {
   return (
@@ -1144,7 +876,7 @@ function SettingsIcon() {
       strokeWidth="1.8"
     >
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   );
 }
