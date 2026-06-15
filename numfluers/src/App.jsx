@@ -1,15 +1,15 @@
 import { useState, useRef } from "react";
 import "./App.css";
-import rose from "../src/assets/rose.jpg";
-import alstro from "../src/assets/alstro.webp";
-import mum from "../src/assets/chrysanthemum.webp";
-import daisy from "../src/assets/daisy.webp";
-import delph from "../src/assets/delph.avif";
-import hydra from "../src/assets/hydrangea.webp";
-import lily from "../src/assets/lily.webp";
-import sprayRoses from "../src/assets/sprayroses.avif";
-import statice from "../src/assets/sprayroses.avif";
-import sunflower from "../src/assets/sunflower.jpg";
+import rose from "./assets/rose.jpg";
+import alstro from "./assets/alstro.webp";
+import mum from "./assets/chrysanthemum.webp";
+import daisy from "./assets/daisy.webp";
+import delph from "./assets/delph.avif";
+import hydra from "./assets/hydrangea.webp";
+import lily from "./assets/lily.webp";
+import sprayRoses from "./assets/sprayroses.avif";
+import statice from "./assets/statice.jpg";
+import sunflower from "./assets/sunflower.jpg";
 
 const DEFAULT_FLOWERS = [
   {
@@ -84,12 +84,21 @@ const DEFAULT_FLOWERS = [
     photo: hydra,
     emoji: "💐",
   },
+  {
+    id: 10,
+    name: "Spray Roses",
+    priceWrapped: 2.5,
+    priceDesign: 3.0,
+    photo: sprayRoses,
+    emoji: "🌸",
+  },
 ];
 
 const DEFAULT_CONTAINERS = [
-  { id: "c1", name: "Vase", price: 0, emoji: "🏺" },
-  { id: "c2", name: "Basket", price: 0, emoji: "🧺" },
+  { id: "c1", name: "Vase", price: 9.99, emoji: "🏺" },
+  { id: "c2", name: "Basket", price: 12.0, emoji: "🧺" },
   { id: "c3", name: "Wrapped", price: 0, emoji: "🎁" },
+  { id: "c4", name: "Bow", price: 2.5, emoji: "🎀" },
 ];
 
 export default function FlowerCalculator() {
@@ -98,8 +107,6 @@ export default function FlowerCalculator() {
   const [cart, setCart] = useState([]);
   const [selected, setSelected] = useState(null);
   const [qtyInput, setQtyInput] = useState("");
-
-  // "wrapped" = wrapped price, "design" = design price
   const [mode, setMode] = useState("wrapped");
 
   const [showSettings, setShowSettings] = useState(false);
@@ -108,7 +115,7 @@ export default function FlowerCalculator() {
   const [editName, setEditName] = useState("");
   const [editWrapped, setEditWrapped] = useState("");
   const [editDesign, setEditDesign] = useState("");
-  const [editPrice, setEditPrice] = useState(""); // containers only
+  const [editPrice, setEditPrice] = useState("");
   const [editPhoto, setEditPhoto] = useState(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -122,11 +129,9 @@ export default function FlowerCalculator() {
   const fileRef = useRef();
   const addFileRef = useRef();
 
-  // resolve the active price for a flower based on current mode
   const activePrice = (flower) =>
     mode === "design" ? flower.priceDesign : flower.priceWrapped;
 
-  // ── calculator logic ────────────────────────────────────────
   const handleItemTap = (item) => {
     if (selected?.id === item.id && qtyInput === "") {
       commitToCart(item, 1);
@@ -154,7 +159,6 @@ export default function FlowerCalculator() {
   };
 
   const commitToCart = (item, qty) => {
-    // snapshot the current active price at time of adding
     const price = item.type === "container" ? item.price : activePrice(item);
     const cartItem = { ...item, price, qty };
     setCart((prev) => {
@@ -178,8 +182,6 @@ export default function FlowerCalculator() {
     });
   };
 
-  const resolvedPrice = (item) =>
-    item.type === "container" ? item.price : activePrice(item);
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const pendingPrice = selected
     ? selected.type === "container"
@@ -193,7 +195,6 @@ export default function FlowerCalculator() {
       ? "Select a flower or container…"
       : `Total  $${total.toFixed(2)}`;
 
-  // ── settings helpers ────────────────────────────────────────
   const isFlowerTab = settingsTab === "flowers";
   const editList = isFlowerTab ? flowers : containers;
 
@@ -204,9 +205,7 @@ export default function FlowerCalculator() {
     if (isFlowerTab) {
       setEditWrapped(String(item.priceWrapped));
       setEditDesign(String(item.priceDesign));
-    } else {
-      setEditPrice(String(item.price));
-    }
+    } else setEditPrice(String(item.price));
   };
 
   const saveEdit = () => {
@@ -344,7 +343,6 @@ export default function FlowerCalculator() {
           <div className="header-sub">Flower Calculator</div>
         </div>
         <div className="header-right">
-          {/* Mode toggle */}
           <div className="mode-toggle">
             <button
               className={`mode-btn${mode === "wrapped" ? " mode-btn--active" : ""}`}
@@ -385,25 +383,27 @@ export default function FlowerCalculator() {
 
       {/* Body */}
       <div className="body">
-        {/* Left: flowers */}
+        {/* Left: scrollable flowers */}
         <div className="left-col">
           <div className="section-label">Flowers</div>
-          <div className="flower-grid">
-            {flowers.map((flower) => {
-              const inCart = cart.find((i) => i.id === flower.id)?.qty || 0;
-              const isSel = selected?.id === flower.id;
-              return (
-                <ItemButton
-                  key={flower.id}
-                  item={flower}
-                  inCart={inCart}
-                  isSelected={isSel}
-                  onTap={handleItemTap}
-                  size="flower"
-                  displayPrice={activePrice(flower)}
-                />
-              );
-            })}
+          <div className="flower-scroll">
+            <div className="flower-grid">
+              {flowers.map((flower) => {
+                const inCart = cart.find((i) => i.id === flower.id)?.qty || 0;
+                const isSel = selected?.id === flower.id;
+                return (
+                  <ItemButton
+                    key={flower.id}
+                    item={flower}
+                    inCart={inCart}
+                    isSelected={isSel}
+                    onTap={handleItemTap}
+                    size="flower"
+                    displayPrice={activePrice(flower)}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -458,7 +458,7 @@ export default function FlowerCalculator() {
         </div>
       </div>
 
-      {/* Order summary */}
+      {/* Cart */}
       <div className="cart-panel">
         <div className="cart-header">
           <div className="cart-title">Order</div>
@@ -529,7 +529,6 @@ export default function FlowerCalculator() {
                 ✕
               </button>
             </div>
-
             <div className="tabs">
               {["flowers", "containers"].map((tab) => (
                 <button
@@ -544,7 +543,6 @@ export default function FlowerCalculator() {
                 </button>
               ))}
             </div>
-
             <div className="flower-list">
               {editList.map((item) => (
                 <div key={item.id} className="list-item">
@@ -683,7 +681,7 @@ export default function FlowerCalculator() {
         </div>
       )}
 
-      {/* Add Item modal */}
+      {/* Add modal */}
       {showAddModal && (
         <div
           className="overlay overlay--top"
@@ -704,7 +702,6 @@ export default function FlowerCalculator() {
                 ✕
               </button>
             </div>
-
             <div
               className="photo-upload-area"
               onClick={() => addFileRef.current.click()}
@@ -723,7 +720,6 @@ export default function FlowerCalculator() {
                 onChange={handleAddPhotoUpload}
               />
             </div>
-
             <div className="emoji-row">
               {(isFlowerTab
                 ? [
@@ -740,7 +736,7 @@ export default function FlowerCalculator() {
                     "💜",
                     "🪻",
                   ]
-                : ["🏺", "🧺", "🎁", "📦", "🪣", "🫙", "🍶", "🪴"]
+                : ["🏺", "🧺", "🎁", "📦", "🪣", "🫙", "🍶", "🪴", "🎀"]
               ).map((em) => (
                 <button
                   key={em}
@@ -754,7 +750,6 @@ export default function FlowerCalculator() {
                 </button>
               ))}
             </div>
-
             <div className="add-fields">
               <input
                 className="edit-input"
@@ -809,7 +804,6 @@ export default function FlowerCalculator() {
                 </div>
               )}
             </div>
-
             <div className="add-modal-actions">
               <button
                 className="cancel-btn"
@@ -833,7 +827,6 @@ export default function FlowerCalculator() {
   );
 }
 
-// ── Reusable item button ─────────────────────────────────────────
 function ItemButton({ item, inCart, isSelected, onTap, size, displayPrice }) {
   const isSmall = size === "container";
   let cls = "item-btn";
@@ -847,7 +840,7 @@ function ItemButton({ item, inCart, isSelected, onTap, size, displayPrice }) {
         {item.photo ? (
           <img src={item.photo} alt={item.name} className="item-photo" />
         ) : (
-          <span style={{ fontSize: isSmall ? 22 : 30 }}>{item.emoji}</span>
+          <span style={{ fontSize: isSmall ? 20 : 30 }}>{item.emoji}</span>
         )}
       </div>
       <div className={`item-name${isSmall ? " item-name--small" : ""}`}>

@@ -16,6 +16,8 @@
   font-family: var(--font-sans);
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Header ─────────────────────────────────────────────────── */
@@ -93,6 +95,8 @@
   display: flex;
   gap: 10px;
   padding: 0 16px;
+  min-height: 0;
+  flex-shrink: 0;
   flex: 1;
 }
 
@@ -101,13 +105,36 @@
   flex-direction: column;
   flex: 1;
   gap: 6px;
+  min-height: 0;
+}
+
+/* scrollable wrapper around the flower grid */
+.flower-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 14px;
+  /* subtle scroll indicator */
+  -webkit-overflow-scrolling: touch;
+}
+
+.flower-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.flower-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.flower-scroll::-webkit-scrollbar-thumb {
+  background: rgba(232, 132, 154, 0.3);
+  border-radius: 99px;
 }
 
 .right-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 154px;
+  gap: 4px;
+  width: 148px;
+  flex-shrink: 0;
 }
 
 .section-label {
@@ -116,19 +143,22 @@
   text-transform: uppercase;
   color: #b08090;
   padding-left: 2px;
+  flex-shrink: 0;
 }
 
 /* ── Flower / Container grids ───────────────────────────────── */
 .flower-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+  padding-bottom: 4px;
 }
 
 .container-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: 4px;
+  /* containers are compact chips, not tall cards */
 }
 
 /* ── Item button ────────────────────────────────────────────── */
@@ -148,12 +178,13 @@
 }
 
 .item-btn--small {
-  border-radius: 14px;
-  padding: 7px 8px;
+  border-radius: 10px;
+  padding: 5px 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-align: left;
+  /* shorter height for compact container chips */
 }
 
 .item-btn--selected {
@@ -177,23 +208,26 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  /* ensures the container never distorts */
   flex-shrink: 0;
 }
 
 .item-thumb--small {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   margin: 0;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #fde8ed, #fdf0e8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .item-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* crop to top-center so flower blooms show, not stems */
   object-position: center top;
   display: block;
 }
@@ -206,10 +240,13 @@
 }
 
 .item-name--small {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #5a3040;
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-price {
@@ -220,11 +257,11 @@
 }
 
 .item-price--small {
-  font-size: 12px;
+  font-size: 11px;
   color: #b07080;
   font-family: var(--font-serif);
   font-weight: 600;
-  margin-left: auto;
+  white-space: nowrap;
 }
 
 .badge {
@@ -256,11 +293,11 @@
 }
 
 .num-key {
-  height: 46px;
-  border-radius: 12px;
+  height: 40px;
+  border-radius: 10px;
   border: none;
   background: #fff;
-  font-size: 19px;
+  font-size: 18px;
   font-family: var(--font-serif);
   font-weight: 600;
   color: var(--rose);
@@ -290,11 +327,14 @@
 
 /* ── Cart panel ─────────────────────────────────────────────── */
 .cart-panel {
-  margin: 10px 16px 24px;
+  margin: 10px 16px 16px;
   background: #fff;
   border-radius: 22px;
-  padding: 16px 18px;
+  padding: 16px 18px; /* ← fixed */
   box-shadow: 0 4px 20px rgba(180, 100, 120, 0.1);
+  max-height: 220px; /* ← caps the height */
+  overflow-y: auto; /* ← makes it scroll */
+  flex-shrink: 0; /* ← stops it squishing the body */
 }
 
 .cart-header {
